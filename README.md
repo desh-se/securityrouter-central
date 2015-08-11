@@ -1,5 +1,5 @@
 # securityrouter-central
-Small, simple website for listing and taking config backups of securityrouter.org systems
+Small, simple website for listing and taking config backups of http://securityrouter.org systems
 
 ## Installation
 1. Clone to a PHP webserver
