@@ -1,0 +1,11 @@
+<?php
+
+require_once('inc.php');
+
+$q = db()->prepare('CREATE TABLE units (id INTEGER PRIMARY KEY, serial TEXT, seen DATETIME, url TEXT, name TEXT, fingerprint TEXT, username TEXT, password TEXT);');
+if (!$q->execute())
+	die("CREATE units failed\n");
+$q = db()->prepare('CREATE TABLE cfgbackup (id INTEGER PRIMARY KEY, serial TEXT, config TEXT, revision TEXT, author TEXT, timestamp TEXT);');
+if (!$q->execute())
+	die("CREATE cfgbackup failed\n");
+die("ok\n");

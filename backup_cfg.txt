@@ -1,0 +1,39 @@
+<?php
+require_once('inc.php');
+$q = db()->prepare('SELECT id,serial,url,username,password FROM units');
+if (!$q->execute())
+	die('SELECT units failed');
+
+while ($r = $q->fetch())
+	$units[] = $r;
+$q = null;
+foreach ($units as $r) {
+	try {
+		echo "Processing {$r['serial']}: ";
+		$client = new SoapClient($r['url'].'/?wsdl',array(
+		    'location' => $r['url'],
+		    'uri' => 'urn:halon',
+		    'login' => $r['username'],
+		    'password' => $r['password'] 
+		    ));
+		$q2 = db()->prepare('SELECT config FROM cfgbackup WHERE serial=:serial ORDER BY id DESC LIMIT 1');
+		if (!$q2->execute(array(':serial' => $r['serial']))) {
+			echo "SELECT cfgbackup failed\n";
+			continue;
+		}
+		$r2 = $q2->fetch();
+		$q2 = null;
+		$cfg = $client->configCheckout();
+		if (isset($r2['config']) && $r2['config'] == $cfg->config) {
+			echo "No changes\n";
+			continue;
+		}
+		$q3 = db()->prepare('INSERT INTO cfgbackup (serial,config,revision,author,timestamp) VALUES (:serial,:config,:revision,:author,datetime(:timestamp, "unixepoch", "localtime"));');
+		if (!$q3->execute(array(':config' => $cfg->config, ':serial' => $r['serial'], ':revision' => $cfg->info->revision, ':author' => $cfg->info->author, ':timestamp' => (string)$cfg->info->timestamp)))
+			echo "INSERT failed\n";
+		$q3 = null;
+		echo "Saved config\n";
+	} catch (Exception $e) {
+		echo $e->getMessage()."\n";
+	}
+}
