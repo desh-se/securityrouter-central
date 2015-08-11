@@ -9,8 +9,8 @@ Small, simple website for listing and taking config backups of http://securityro
 5. Run `php install.txt`
 6. Create a `cron` job to run `php backup_cfg.txt` as often as you like
 
-## Call-home
-Create a file such as `/cfg/callhome.sh` which you start from `/cfg/skel/rc.local`:
+## Usage
+Create a file such as `/cfg/callhome.sh` which you start from `/cfg/skel/rc.local` on your securityrouters: 
 
 ```
 serial=`cat /cfg/serial`
@@ -20,3 +20,5 @@ do
         sleep 10
 done
 ```
+
+and once they show up in the router list (they will add themself to the database via the `api.php` request), press the *edit* button and add a URL (in the format `https://HOST/remote/`), username and password (to a read-only user, preferably). 
