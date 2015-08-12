@@ -2,16 +2,23 @@
 require_once('inc.php');
 
 if (isset($_POST['edit'])) {
-	$q = db()->prepare('UPDATE units SET serial=:serial,name=:name,url=:url,username=:username,password=:password WHERE id=:id');
+	$q = db()->prepare('UPDATE units SET serial=:serial,name=:name,url=:url,username=:username WHERE id=:id');
 	if (!$q->execute(array(
 		':id' => $_POST['id'],
 		':serial' => $_POST['serial'],
 		':name' => $_POST['name'],
 		':url' => $_POST['url'],
 		':username' => $_POST['username'],
-		':password' => $_POST['password'],
 	)))
 		die('UPDATE failed');
+	if ($_POST['password'] !== '') {
+		$q = db()->prepare('UPDATE units SET password=:password WHERE id=:id');
+		if (!$q->execute(array(
+			':id' => $_POST['id'],
+			':password' => $_POST['password'],
+		)))
+			die('UPDATE password failed');
+	}
 	header('Location: ?');
 	die();
 }
@@ -35,7 +42,7 @@ require_once('header.php') ?>
 		</thead>
 		<tbody>
 <?php
-$q = db()->prepare('SELECT id,serial,name,url,username,password,strftime("%s","now")-strftime("%s",seen) as seen FROM units');
+$q = db()->prepare('SELECT id,serial,name,url,username,strftime("%s","now")-strftime("%s",seen) as seen FROM units');
 if (!$q->execute())
 	die('SELECT failed');
 while ($r = $q->fetch()) {
@@ -52,7 +59,7 @@ while ($r = $q->fetch()) {
 				<td class="sub"></td>
 				<td>
 					<a href="cfgbackup.php?serial=<?php p($r['serial'])?>" class="btn btn-default btn-xs" title="Download configuration"><span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span></a>
-					<a href="#" data-id="<?php p($r['id']) ?>" data-serial="<?php p($r['serial']) ?>" data-name="<?php p($r['name']) ?>" data-url="<?php p($r['url']) ?>" data-username="<?php p($r['username']) ?>" data-password="<?php p($r['password']) ?>" data-toggle="modal" data-target="#edit_unit" class="btn btn-default btn-xs" title="Edit"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span></a>
+					<a href="#" data-id="<?php p($r['id']) ?>" data-serial="<?php p($r['serial']) ?>" data-name="<?php p($r['name']) ?>" data-url="<?php p($r['url']) ?>" data-username="<?php p($r['username']) ?>" data-toggle="modal" data-target="#edit_unit" class="btn btn-default btn-xs" title="Edit"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span></a>
 				</td>
 			</tr>
 <?php } ?>
@@ -85,7 +92,7 @@ while ($r = $q->fetch()) {
 			</div>
 			<div class="form-group">
 				<label class="col-sm-4 control-label">Password</label>
-				<div class="col-sm-8"><input type="password" class="form-control" name="password" id="edit_password"></div>
+				<div class="col-sm-8"><input type="password" class="form-control" name="password"></div>
 			</div>
 		</div>
 		<div class="modal-footer">
@@ -102,7 +109,6 @@ $("#edit_unit").on("show.bs.modal", function (event) {
 	$("#edit_name").val($(event.relatedTarget).data("name"));
 	$("#edit_url").val($(event.relatedTarget).data("url"));
 	$("#edit_username").val($(event.relatedTarget).data("username"));
-	$("#edit_password").val($(event.relatedTarget).data("password"));
 });
 $(".unit").each(function() {
 	var serial = $(this).find(".serial").text();
